@@ -136,6 +136,9 @@ impl<A: NiceEguiApp> Editor for EguiEditor<A> {
         host: Option<HostMethods>,
     ) -> Result<SpawnedEditor<Self::Handle>, Box<dyn Error>> {
         let egui_state = self.egui_state.clone();
+        if let Some(scale_factor) = fallback_scale_factor {
+            egui_state.fallback_scale_factor.store(Some(scale_factor as f32));
+        }
         let user_app = self.user_app.clone();
         let size = egui_state.size();
         let zoom_factor = egui_state.zoom_factor.load();
@@ -314,6 +317,12 @@ impl EditorHandle for EguiEditorHandle {
         scale_factor: f64,
         window: &Self::Window,
     ) -> Result<(), Self::Error> {
+        // Record the host's scale so `Editor::size()` (the host's `get_size()`) reports the size
+        // the window is actually drawn at. Without this the editor draws scaled but reports its
+        // unscaled size, and hosts clip it.
+        self.egui_state
+            .fallback_scale_factor
+            .store(Some(scale_factor as f32));
         window.suggest_fallback_scale_factor(scale_factor)
     }
 
