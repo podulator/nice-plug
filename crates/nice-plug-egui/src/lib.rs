@@ -133,11 +133,14 @@ impl EguiEditorState {
         self.size.load()
     }
 
+    /// The scale the editor is drawn at: the host's if it called `set_scale()` (an embedded
+    /// editor is the host's child, as CLAP intends), else the one the window found (the
+    /// desktop's), else 1.
     fn system_scale_factor(&self) -> f32 {
-        let scale_factor = self.system_scale_factor.load();
-        let fallback_scale_factor = self.fallback_scale_factor.load();
+        let host = self.fallback_scale_factor.load();
+        let window = self.system_scale_factor.load();
 
-        scale_factor.unwrap_or_else(|| fallback_scale_factor.unwrap_or(1.0))
+        host.or(window).unwrap_or(1.0)
     }
 
     pub fn logical_size(&self) -> LogicalSize<f32> {
