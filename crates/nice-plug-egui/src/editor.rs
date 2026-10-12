@@ -223,6 +223,14 @@ impl<A: NiceEguiApp> Editor for EguiEditor<A> {
             host,
         )?;
 
+        // Record the scale the window actually draws at. On X11 baseview prefers the desktop's
+        // Xft.dpi over the host's suggestion, and many hosts (Reaper) never call set_scale(), so
+        // without this get_size() reports the unscaled size until the first resize callback, and
+        // the host clips the editor.
+        self.egui_state
+            .system_scale_factor
+            .store(Some(window.size().scale_factor as f32));
+
         self.egui_state.open.store(true, Ordering::Release);
 
         Ok(SpawnedEditor {
